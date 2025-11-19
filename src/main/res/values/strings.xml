@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Recipe Catalog</string>
+    <string name="search_recipes">Search recipes…</string>
+    <string name="all_recipes">All Recipes</string>
+    <string name="ingredients">Ingredients</string>
+    <string name="instructions">Instructions</string>
+    <string name="cooking_time">Cooking Time</string>
+    <string name="servings">Servings</string>
+    <string name="difficulty">Difficulty</string>
+    <string name="category">Category</string>
+    <string name="minutes">minutes</string>
+    <string name="people">people</string>
+    <string name="no_recipes_found">No recipes found</string>
+</resources>
