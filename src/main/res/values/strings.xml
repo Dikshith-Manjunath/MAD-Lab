@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Recipe Catalog</string>
-    <string name="search_recipes">Search recipes…</string>
+    <string name="search_recipes">Search recipes...</string>
     <string name="all_recipes">All Recipes</string>
     <string name="ingredients">Ingredients</string>
     <string name="instructions">Instructions</string>
@@ -11,4 +11,33 @@
     <string name="minutes">minutes</string>
     <string name="people">people</string>
     <string name="no_recipes_found">No recipes found</string>
+    <string name="recipe_image">Recipe image</string>
+    <string name="calories">Calories</string>
+    <string name="allergens">Allergens</string>
+    <string name="format_calories">%1$d kcal</string>
+    <string name="format_minutes">%1$d min</string>
+    <string name="format_servings">Serves %1$d</string>
+    <string name="use_location">Use My Location</string>
+    <string name="clear_location_filter">Show All Cuisines</string>
+    <string name="location_recommendation">Highlighting nearby favorites: %1$s cuisine</string>
+    <string name="location_fetching">Checking nearby cuisine...</string>
+    <string name="grant_location_permission">Location permission is needed to surface nearby cuisine suggestions.</string>
+    <string name="location_unavailable">Unable to determine your location. Try again outdoors or check GPS.</string>
+    <string name="location_filter_cleared">Showing every cuisine again.</string>
+    <string name="sync_preparing">Syncing authentic recipes...</string>
+    <string name="sync_progress">Imported %1$d of %2$d recipes...</string>
+    <string name="sync_success">Loaded %1$d authentic recipes.</string>
+    <string name="sync_failed">Could not import recipes: %1$s</string>
+    <string name="retry_sync">Retry Sync</string>
+    <string name="scanner_no_results">No ingredients detected. Try better lighting and capture again.</string>
+    <string name="scanner_permission_message">Camera permission is required to scan ingredients.</string>
+    <string name="voice_prompt">Say the dish name to generate a recipe.</string>
+    <string name="voice_permission_message">Microphone permission is required for voice dictation.</string>
+    <string name="voice_error">We couldn\'t capture speech. Please try again.</string>
+    <string name="scan_ingredients">Scan Ingredients</string>
+    <string name="speak_dish_name">Speak Dish Name</string>
+    <string name="ingredients_used_hint">Recognized ingredients: %1$s</string>
+    <string name="start_instruction_audio">Read instructions aloud</string>
+    <string name="stop_instruction_audio">Stop reading instructions</string>
+    <string name="tts_step_format">Step %1$d. %2$s</string>
 </resources>

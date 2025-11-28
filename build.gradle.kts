@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.androidApplication)
 }
 
 android {
@@ -39,11 +39,20 @@ dependencies {
     implementation(libs.material)
     implementation(libs.recyclerview)
     implementation(libs.cardview)
-    implementation(libs.constraint.layout)
+    implementation(libs.constraintLayout)
     implementation(libs.coordinatorlayout)
     implementation(libs.okhttp)
     implementation(libs.gson)
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-livedata:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-runtime:2.6.2")
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+    implementation("com.google.mlkit:image-labeling:17.0.7")
     testImplementation(libs.junit)
-    androidTestImplementation(libs.ext.junit)
-    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.extJunit)
+    androidTestImplementation(libs.espressoCore)
 }

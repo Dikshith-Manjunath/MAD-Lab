@@ -3,14 +3,22 @@ package com.example.myapplication;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.example.myapplication.data.RecipeIngredient;
+import com.example.myapplication.models.Recipe;
 import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -59,13 +67,19 @@ public class GeminiApiService {
                 "Respond ONLY with a valid JSON object in this exact format (no markdown, no extra text):\n" +
                 "{\n" +
                 "  \"name\": \"Recipe Name\",\n" +
-                "  \"category\": \"Category (e.g., Italian, Indian, Dessert)\",\n" +
-                "  \"difficulty\": \"Easy/Medium/Hard\",\n" +
+                "  \"cuisine\": \"Cuisine or origin\",\n" +
+                "  \"calories\": 480,\n" +
                 "  \"cookingTime\": 30,\n" +
+                "  \"allergens\": \"Contains dairy, nuts\",\n" +
                 "  \"servings\": 4,\n" +
-                "  \"ingredients\": [\"ingredient 1\", \"ingredient 2\"],\n" +
-                "  \"instructions\": [\"step 1\", \"step 2\"],\n" +
-                "  \"emoji\": \"🍝\"\n" +
+                "  \"ingredients\": [\n" +
+                "    {\n" +
+                "      \"name\": \"ingredient name\",\n" +
+                "      \"quantity\": 1.5,\n" +
+                "      \"unit\": \"cups\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"instructions\": [\"step 1\", \"step 2\"]\n" +
                 "}";
     }
     
@@ -114,51 +128,207 @@ public class GeminiApiService {
     
     private Recipe parseRecipe(String jsonResponse, String dishName) {
         try {
-            // Clean up the response - remove markdown code blocks if present
-            String cleanJson = jsonResponse.trim();
-            if (cleanJson.startsWith("```json")) {
-                cleanJson = cleanJson.substring(7);
+            String cleanJson = sanitizeResponse(jsonResponse);
+            JsonElement element = JsonParser.parseString(cleanJson);
+            if (!element.isJsonObject()) {
+                throw new IllegalStateException("Invalid JSON payload");
             }
-            if (cleanJson.startsWith("```")) {
-                cleanJson = cleanJson.substring(3);
+
+            JsonObject json = element.getAsJsonObject();
+
+            String name = getString(json, "name", dishName);
+            String cuisine = getString(json, "cuisine", "AI Fusion");
+            int calories = getInt(json, "calories", 400);
+            int cookingTime = getInt(json, "cookingTime", 30);
+            String allergens = getString(json, "allergens", "Check ingredients");
+            int servings = getInt(json, "servings", 4);
+
+            List<RecipeIngredient> ingredients = parseIngredients(json);
+            List<String> instructions = parseInstructions(json);
+
+            if (ingredients.isEmpty()) {
+                ingredients = Collections.singletonList(new RecipeIngredient(dishName + " ingredient", 0, ""));
             }
-            if (cleanJson.endsWith("```")) {
-                cleanJson = cleanJson.substring(0, cleanJson.length() - 3);
+            if (instructions.isEmpty()) {
+                instructions = Collections.singletonList("Refer to AI notes for preparation steps.");
             }
-            cleanJson = cleanJson.trim();
-            
-            RecipeJson recipeJson = gson.fromJson(cleanJson, RecipeJson.class);
-            
+
             return new Recipe(
-                (int) (System.currentTimeMillis() % Integer.MAX_VALUE),
-                recipeJson.name != null ? recipeJson.name : dishName,
-                recipeJson.category != null ? recipeJson.category : "AI Generated",
-                recipeJson.difficulty != null ? recipeJson.difficulty : "Medium",
-                recipeJson.cookingTime > 0 ? recipeJson.cookingTime : 30,
-                recipeJson.servings > 0 ? recipeJson.servings : 4,
-                recipeJson.ingredients != null ? recipeJson.ingredients : new ArrayList<>(),
-                recipeJson.instructions != null ? recipeJson.instructions : new ArrayList<>(),
-                recipeJson.emoji != null ? recipeJson.emoji : "🤖"
+                    0,
+                    name,
+                    cuisine,
+                    calories,
+                    cookingTime,
+                    allergens,
+                    servings,
+                    ingredients,
+                    instructions,
+                    null,
+                    "ic_recipe_placeholder"
             );
         } catch (Exception e) {
-            // If parsing fails, create a basic recipe
-            ArrayList<String> ingredients = new ArrayList<>();
-            ingredients.add("See AI response for details");
-            
+            ArrayList<RecipeIngredient> ingredients = new ArrayList<>();
+            ingredients.add(new RecipeIngredient("See AI response for details", 0, ""));
+
             ArrayList<String> instructions = new ArrayList<>();
-            instructions.add(jsonResponse);
-            
+            instructions.add(cleanMarkdown(jsonResponse));
+
             return new Recipe(
-                (int) (System.currentTimeMillis() % Integer.MAX_VALUE),
+                0,
                 dishName,
-                "AI Generated",
-                "Medium",
+                "AI Fusion",
+                400,
                 30,
+                "Check ingredients",
                 4,
                 ingredients,
                 instructions,
-                "🤖"
+                null,
+                "ic_recipe_placeholder"
             );
+        }
+    }
+
+    private String sanitizeResponse(String input) {
+        String clean = cleanMarkdown(input == null ? "" : input).trim();
+        if (clean.startsWith("{")) {
+            return clean;
+        }
+        int firstBrace = clean.indexOf('{');
+        int lastBrace = clean.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+            return clean.substring(firstBrace, lastBrace + 1);
+        }
+        return clean;
+    }
+
+    private String cleanMarkdown(String text) {
+        if (text == null) {
+            return "";
+        }
+        String clean = text.trim();
+        if (clean.startsWith("```json")) {
+            clean = clean.substring(7);
+        }
+        if (clean.startsWith("```")) {
+            clean = clean.substring(3);
+        }
+        if (clean.endsWith("```")) {
+            clean = clean.substring(0, clean.length() - 3);
+        }
+        return clean.trim();
+    }
+
+    private String getString(JsonObject json, String key, String fallback) {
+        if (json.has(key) && json.get(key).isJsonPrimitive()) {
+            return json.get(key).getAsString();
+        }
+        return fallback;
+    }
+
+    private int getInt(JsonObject json, String key, int fallback) {
+        if (json.has(key) && json.get(key).isJsonPrimitive()) {
+            try {
+                return json.get(key).getAsInt();
+            } catch (NumberFormatException e) {
+                return fallback;
+            }
+        }
+        return fallback;
+    }
+
+    private List<RecipeIngredient> parseIngredients(JsonObject json) {
+        if (!json.has("ingredients")) {
+            return new ArrayList<>();
+        }
+
+        JsonElement element = json.get("ingredients");
+        List<RecipeIngredient> results = new ArrayList<>();
+
+        if (element.isJsonArray()) {
+            JsonArray array = element.getAsJsonArray();
+            for (JsonElement item : array) {
+                if (item.isJsonObject()) {
+                    JsonObject obj = item.getAsJsonObject();
+                    String name = obj.has("name") ? obj.get("name").getAsString() : "";
+                    double quantity = obj.has("quantity") && obj.get("quantity").isJsonPrimitive()
+                            ? safeDouble(obj.get("quantity")) : 0;
+                    String unit = obj.has("unit") ? obj.get("unit").getAsString() : "";
+                    results.add(new RecipeIngredient(name, quantity, unit));
+                } else if (item.isJsonPrimitive()) {
+                    results.add(parseIngredientLine(item.getAsString()));
+                }
+            }
+        } else if (element.isJsonPrimitive()) {
+            results.add(parseIngredientLine(element.getAsString()));
+        }
+
+        return results;
+    }
+
+    private List<String> parseInstructions(JsonObject json) {
+        if (!json.has("instructions")) {
+            return new ArrayList<>();
+        }
+        JsonElement element = json.get("instructions");
+        List<String> instructions = new ArrayList<>();
+        if (element.isJsonArray()) {
+            JsonArray array = element.getAsJsonArray();
+            for (JsonElement item : array) {
+                instructions.add(item.getAsString());
+            }
+        } else if (element.isJsonPrimitive()) {
+            instructions.add(element.getAsString());
+        }
+        return instructions;
+    }
+
+    private double safeDouble(JsonElement element) {
+        try {
+            return element.getAsDouble();
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private RecipeIngredient parseIngredientLine(String line) {
+        if (line == null) {
+            return new RecipeIngredient("Ingredient", 0, "");
+        }
+        String cleaned = line.replace("•", "").replace("-", "").trim();
+        Pattern pattern = Pattern.compile("^(\\d+(?:[\\./]\\d+)?)(?:\\s+([a-zA-Z]+))?\\s+(.*)$");
+        Matcher matcher = pattern.matcher(cleaned);
+        if (matcher.find()) {
+            double quantity = parseQuantity(matcher.group(1));
+            String unit = matcher.group(2) != null ? matcher.group(2) : "";
+            String name = matcher.group(3) != null ? matcher.group(3) : cleaned;
+            return new RecipeIngredient(name, quantity, unit);
+        }
+        return new RecipeIngredient(cleaned, 0, "");
+    }
+
+    private double parseQuantity(String text) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
+        if (text.contains("/")) {
+            String[] parts = text.split("/");
+            if (parts.length == 2) {
+                try {
+                    double numerator = Double.parseDouble(parts[0]);
+                    double denominator = Double.parseDouble(parts[1]);
+                    if (denominator != 0) {
+                        return numerator / denominator;
+                    }
+                } catch (NumberFormatException ignored) {
+                    return 0;
+                }
+            }
+        }
+        try {
+            return Double.parseDouble(text);
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
     
@@ -181,17 +351,5 @@ public class GeminiApiService {
     
     private static class GeminiCandidate {
         GeminiContent content;
-    }
-    
-    private static class RecipeJson {
-        String name;
-        String category;
-        String difficulty;
-        @SerializedName("cookingTime")
-        int cookingTime;
-        int servings;
-        ArrayList<String> ingredients;
-        ArrayList<String> instructions;
-        String emoji;
     }
 }

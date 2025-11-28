@@ -1,28 +1,37 @@
 package com.example.myapplication;
 
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.example.myapplication.models.Recipe;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder> {
 
-    private ArrayList<Recipe> recipes;
-    private OnRecipeClickListener listener;
+    private List<Recipe> recipes = new ArrayList<>();
+    private final OnRecipeClickListener listener;
 
     public interface OnRecipeClickListener {
         void onRecipeClick(Recipe recipe);
     }
 
-    public RecipeAdapter(ArrayList<Recipe> recipes, OnRecipeClickListener listener) {
-        this.recipes = recipes;
+    public RecipeAdapter(OnRecipeClickListener listener) {
         this.listener = listener;
+    }
+
+    public void submitList(List<Recipe> recipes) {
+        this.recipes = recipes == null ? new ArrayList<>() : new ArrayList<>(recipes);
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -36,31 +45,22 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
     @Override
     public void onBindViewHolder(@NonNull RecipeViewHolder holder, int position) {
         Recipe recipe = recipes.get(position);
-        
-        holder.recipeEmoji.setText(recipe.getImageEmoji());
-        holder.recipeName.setText(recipe.getName());
-        holder.recipeCategory.setText(recipe.getCategory());
-        holder.recipeTime.setText(recipe.getCookingTime() + " min");
-        holder.recipeServings.setText(recipe.getServings() + " servings");
-        holder.recipeDifficulty.setText(recipe.getDifficulty());
-        
-        // Set difficulty color
-        int difficultyColor;
-        switch (recipe.getDifficulty().toLowerCase()) {
-            case "easy":
-                difficultyColor = Color.parseColor("#4CAF50");
-                break;
-            case "medium":
-                difficultyColor = Color.parseColor("#FF9800");
-                break;
-            case "hard":
-                difficultyColor = Color.parseColor("#F44336");
-                break;
-            default:
-                difficultyColor = Color.parseColor("#757575");
+        if (recipe.getImageUrl() != null && !recipe.getImageUrl().isEmpty()) {
+            Glide.with(holder.recipeImage.getContext())
+                    .load(recipe.getImageUrl())
+                    .placeholder(recipe.resolveImageResId(holder.itemView.getContext()))
+                    .error(recipe.resolveImageResId(holder.itemView.getContext()))
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .into(holder.recipeImage);
+        } else {
+            holder.recipeImage.setImageResource(recipe.resolveImageResId(holder.itemView.getContext()));
         }
-        holder.recipeDifficulty.setTextColor(difficultyColor);
-        
+        holder.recipeName.setText(recipe.getName());
+        holder.recipeCuisine.setText(recipe.getCuisine());
+        holder.recipeCalories.setText(holder.itemView.getContext().getString(R.string.format_calories, recipe.getCalories()));
+        holder.recipeCookTime.setText(holder.itemView.getContext().getString(R.string.format_minutes, recipe.getCookingTime()));
+        holder.recipeAllergens.setText(recipe.getAllergens());
+
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onRecipeClick(recipe);
@@ -73,27 +73,22 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
         return recipes.size();
     }
 
-    public void updateRecipes(ArrayList<Recipe> newRecipes) {
-        this.recipes = newRecipes;
-        notifyDataSetChanged();
-    }
-
     static class RecipeViewHolder extends RecyclerView.ViewHolder {
-        TextView recipeEmoji;
+        ImageView recipeImage;
         TextView recipeName;
-        TextView recipeCategory;
-        TextView recipeTime;
-        TextView recipeServings;
-        TextView recipeDifficulty;
+        TextView recipeCuisine;
+        TextView recipeCalories;
+        TextView recipeCookTime;
+        TextView recipeAllergens;
 
-        public RecipeViewHolder(@NonNull View itemView) {
+        RecipeViewHolder(@NonNull View itemView) {
             super(itemView);
-            recipeEmoji = itemView.findViewById(R.id.recipeEmoji);
+            recipeImage = itemView.findViewById(R.id.recipeImage);
             recipeName = itemView.findViewById(R.id.recipeName);
-            recipeCategory = itemView.findViewById(R.id.recipeCategory);
-            recipeTime = itemView.findViewById(R.id.recipeTime);
-            recipeServings = itemView.findViewById(R.id.recipeServings);
-            recipeDifficulty = itemView.findViewById(R.id.recipeDifficulty);
+            recipeCuisine = itemView.findViewById(R.id.recipeCuisine);
+            recipeCalories = itemView.findViewById(R.id.recipeCalories);
+            recipeCookTime = itemView.findViewById(R.id.recipeCookTime);
+            recipeAllergens = itemView.findViewById(R.id.recipeAllergens);
         }
     }
 }

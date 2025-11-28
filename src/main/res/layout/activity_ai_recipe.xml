@@ -67,7 +67,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Powered by Gemini 2.5 Pro"
+                        android:text="Powered by Gemini"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary"
                         android:layout_marginBottom="8dp" />
@@ -75,7 +75,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Ask for any dish and get a custom recipe!"
+                        android:text="Ask for any dish or scan ingredients!"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary"
                         android:textAlignment="center" />
@@ -118,11 +118,22 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/scanButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Scan Ingredients"
+                        android:layout_marginTop="8dp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:icon="@android:drawable/ic_menu_camera"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="8dp" />
+
                     <Button
                         android:id="@+id/generateButton"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="8dp"
                         android:text="Generate Recipe"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -160,7 +171,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:padding="16dp"
-                        android:text="Enter a dish name and tap 'Generate Recipe' to get started!"
+                        android:text="Enter a dish name or scan ingredients to get started!"
                         android:textSize="14sp"
                         android:textColor="@color/text_primary"
                         android:lineSpacingExtra="4dp" />
