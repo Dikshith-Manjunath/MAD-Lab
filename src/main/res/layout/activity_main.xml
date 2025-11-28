@@ -29,10 +29,12 @@
         android:layout_margin="16dp"
         app:boxBackgroundMode="filled"
         app:boxBackgroundColor="@color/white"
-        app:startIconDrawable="@android:drawable/ic_menu_search"
+        app:startIconDrawable="@drawable/ic_search"
+        app:startIconTint="@color/text_secondary"
         app:endIconMode="custom"
         app:endIconDrawable="@drawable/ic_mic"
         app:endIconContentDescription="@string/voice_prompt"
+        app:endIconTint="@color/text_secondary"
         app:layout_constraintTop_toBottomOf="@id/appBarLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
