@@ -1,0 +1,24 @@
+Dice.jsx
+const Dice = ({ onRoll, disabled, currentPlayer }) => {
+  const throwShells = () => {
+    // Chowka Bara shells logic:
+    // 1 mouth = 1, 2 mouths = 2, 3 mouths = 3, 4 mouths = 4 (Chowka), 0 mouths = 8 (Baara)
+    const options = [1, 2, 3, 4, 8];
+    const randomIndex = Math.floor(Math.random() * options.length);
+    const value = options[randomIndex];
+    onRoll(value);
+  };
+
+  return (
+    <div className="dice-container">
+      <h3>Player {currentPlayer}'s Turn</h3>
+      <button 
+        className="roll-btn" 
+        onClick={throwShells} 
+        disabled={disabled}
+      >
+        Throw Shells
+      </button>
+    </div>
+  );
+};

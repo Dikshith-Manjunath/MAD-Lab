@@ -1,0 +1,95 @@
+app.js:
+function App() {
+  const [currentPlayer, setCurrentPlayer] = useState(1);
+  const [players, setPlayers] = useState([
+    { id: 1, name: 'P1', positions: [0, 0, 0, 0], color: '#e74c3c', hasPassport: false, homeCell: 22 },
+    { id: 2, name: 'P2', positions: [0, 0, 0, 0], color: '#3498db', hasPassport: false, homeCell: 2 },
+    { id: 3, name: 'P3', positions: [0, 0, 0, 0], color: '#2ecc71', hasPassport: false, homeCell: 10 },
+    { id: 4, name: 'P4', positions: [0, 0, 0, 0], color: '#f1c40f', hasPassport: false, homeCell: 14 }
+  ]);
+  const [rollValue, setRollValue] = useState(null);
+  const [message, setMessage] = useState('Player 1, roll the shells!');
+  const [winner, setWinner] = useState(null);
+  const [turns, setTurns] = useState(0);
+
+  const safeCells = [2, 10, 14, 22, 12];
+
+  // Path definitions for each starting point
+  const getPlayerPath = (playerId) => {
+    const outer = [0, 5, 10, 15, 20, 21, 22, 23, 24, 19, 14, 9, 4, 3, 2, 1];
+    const inner = [6, 11, 16, 17, 18, 13, 8, 7];
+    const center = [12];
+
+    let startIdx;
+    let innerStartIdx;
+    switch (playerId) {
+      case 1: startIdx = 6; innerStartIdx = 2; break; // 22
+      case 2: startIdx = 14; innerStartIdx = 6; break; // 2
+      case 3: startIdx = 2; innerStartIdx = 0; break; // 10
+      case 4: startIdx = 10; innerStartIdx = 4; break; // 14
+      default: startIdx = 6; innerStartIdx = 2;
+    }
+
+    const rotatedOuter = [...outer.slice(startIdx), ...outer.slice(0, startIdx)];
+    const rotatedInner = [...inner.slice(innerStartIdx), ...inner.slice(0, innerStartIdx)];
+
+    return [...rotatedOuter, ...rotatedInner, ...center];
+  };
+
+  const handleRoll = (val) => {
+    if (winner) return;
+    setRollValue(val);
+    const bonus = (val === 4 || val === 8);
+    setMessage(`Player ${currentPlayer} rolled a ${val}! ${bonus ? '🎉 Bonus turn!' : 'Select a pawn to move.'}`);
+    setTurns(prev => prev + 1);
+  };
+
+  const handlePawnClick = (playerId, pawnIndex) => {
+    if (winner || rollValue === null || playerId !== currentPlayer) return;
+
+    const newPlayers = [...players];
+    const player = newPlayers.find(p => p.id === playerId);
+    let currentStep = player.positions[pawnIndex];
+    const path = getPlayerPath(playerId);
+
+    // Move pawn
+    let nextStep = currentStep + rollValue;
+
+    // Gatti (Double) Path Blocking: Cannot pass over or land on an opponent's double
+    // Safe zones ('X') are never blocking — free passage always allowed there
+    for (let i = 1; i <= rollValue; i++) {
+      const stepCheck = currentStep + i;
+      if (stepCheck > 24) break;
+      const cellCheck = path[stepCheck];
+
+      // Safe zones allow free movement — skip Gatti check
+      if (safeCells.includes(cellCheck)) continue;
+
+      const isBlocking = newPlayers.some(p => {
+        if (p.id === player.id) return false;
+        const count = p.positions.filter(pos => pos !== -1 && pos < 24 && getPlayerPath(p.id)[pos] === cellCheck).length;
+        return count >= 2;
+      });
+
+      if (isBlocking) {
+        setMessage(`Movement blocked by a Gatti (Double) — try a different pawn!`);
+        setRollValue(null);
+        nextTurn();
+        return;
+      }
+    }
+
+    // Passport Check: Can't go to inner (step 16) if no hit
+    if (!player.hasPassport && nextStep >= 16) {
+      // Loop around outer ring (steps 0-15)
+      nextStep = nextStep % 16;
+      setMessage("You must 'hit' an opponent before entering the inner squares!");
+    }
+
+    // Win condition: Must reach exact center (step 24)
+    if (nextStep > 24) {
+      setMessage("Exact roll needed to enter center!");
+      setRollValue(null);
+      nextTurn();
+      return;
+    }

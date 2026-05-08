@@ -1,0 +1,43 @@
+board.jsx
+const Board = ({ players, onPawnClick, getPlayerPath }) => {
+  const grid = Array(25).fill(null);
+  const safeCells = [2, 10, 14, 22, 12];
+
+  return (
+    <div className="board">
+      {grid.map((_, i) => (
+        <div
+          key={i}
+          className={`cell ${safeCells.includes(i) ? 'safe-zone' : ''} ${i === 12 ? 'center-zone' : ''}`}
+        >
+          {safeCells.includes(i) && <div className="safe-mark">X</div>}
+
+          {players.map(p => {
+            const path = getPlayerPath(p.id);
+            return p.positions.map((step, pawnIndex) => {
+              if (step !== -1 && path[step] === i) {
+                return (
+                  <div
+                    key={`${p.id}-${pawnIndex}`}
+                    className="pawn"
+                    style={{ backgroundColor: p.color }}
+                    onClick={() => onPawnClick(p.id, pawnIndex)}
+                    title={`${p.name} Pawn ${pawnIndex + 1}`}
+                  >
+                    {p.id}
+                  </div>
+                );
+              }
+              return null;
+            });
+          })}
+
+          {/* Start markers for players */}
+          {players.map(p => p.homeCell === i && (
+            <div key={`home-${p.id}`} className="home-marker" style={{ borderColor: p.color }}></div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
